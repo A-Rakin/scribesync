@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Welcome to ScribeSync, {{ current_user.username }}! 👋</h2>
+    <a href="{{ url_for('main.schedule_post') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Schedule New Post
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5>Total Posts</h5>
+                <h2>{{ total_posts }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5>Scheduled</h5>
+                <h2>{{ scheduled_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5>Published</h5>
+                <h2>{{ published_count if published_count is defined else 0 }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5>Draft Posts</h5>
+                <h2>{{ total_posts - scheduled_count - (published_count if published_count is defined else 0) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Posts -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Posts</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_posts %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Platform</th>
+                            <th>Status</th>
+                            <th>Scheduled Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in recent_posts %}
+                        <tr>
+                            <td>
+                                <strong>{{ post.title or 'Untitled' }}</strong>
+                                <br>
+                                <small class="text-muted">{{ (post.content[:50] + '...') if post.content else 'No content' }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'primary' if post.platform == 'linkedin' else 'info' if post.platform == 'twitter' else 'danger' }}">
+                                    {{ post.platform }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if post.status == 'published' else 'warning' if post.status == 'scheduled' else 'secondary' }}">
+                                    {{ post.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if post.scheduled_time %}
+                                    {{ post.scheduled_time.strftime('%b %d, %H:%M') }}
+                                {% else %}
+                                    <em>Not scheduled</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">No posts yet</h5>
+                <p class="text-muted">Schedule your first post to get started!</p>
+                <a href="{{ url_for('main.schedule_post') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Schedule First Post
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('main.schedule_post') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Schedule New Post
+                    </a>
+                    <a href="{{ url_for('main.calendar') }}" class="btn btn-info">
+                        <i class="bi bi-calendar-week"></i> View Calendar
+                    </a>
+                    <a href="{{ url_for('main.analytics') }}" class="btn btn-success">
+                        <i class="bi bi-graph-up"></i> View Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">AI Content Assistant</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Get content ideas for your next post:</p>
+                <div class="d-grid gap-2">
+                    <button onclick="getEducationalIdeas()" class="btn btn-outline-primary">
+                        <i class="bi bi-lightbulb"></i> Educational Ideas
+                    </button>
+                    <button onclick="getPromotionalIdeas()" class="btn btn-outline-success">
+                        <i class="bi bi-megaphone"></i> Promotional Ideas
+                    </button>
+                </div>
+                <div id="aiSuggestions" class="mt-3 p-3 border rounded" style="display: none;">
+                    <h6>AI Suggestions:</h6>
+                    <div id="suggestionContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function getEducationalIdeas() {
+    try {
+        const response = await fetch('/api/suggestions?category=educational&count=2');
+        const suggestions = await response.json();
+        showSuggestions(suggestions);
+    } catch (error) {
+        alert('Failed to get suggestions. Please try again.');
+    }
+}
+
+async function getPromotionalIdeas() {
+    try {
+        const response = await fetch('/api/suggestions?category=promotional&count=2');
+        const suggestions = await response.json();
+        showSuggestions(suggestions);
+    } catch (error) {
+        alert('Failed to get suggestions. Please try again.');
+    }
+}
+
+function showSuggestions(suggestions) {
+    const container = document.getElementById('aiSuggestions');
+    const content = document.getElementById('suggestionContent');
+
+    let html = '';
+    suggestions.forEach((suggestion, index) => {
+        html += `
+            <div class="mb-2 p-2 border-bottom">
+                <strong>${index + 1}. ${suggestion.title}</strong><br>
+                <small class="text-muted">Hashtags: ${suggestion.hashtags ? suggestion.hashtags.join(' ') : 'None'}</small>
+            </div>
+        `;
+    });
+
+    content.innerHTML = html;
+    container.style.display = 'block';
+}
+</script>
+{% endblock %}

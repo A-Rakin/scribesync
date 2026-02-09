@@ -1,0 +1,1240 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
+<style>
+    .analytics-container {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .metric-change {
+        font-size: 0.9rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+    }
+    .metric-change.positive {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .metric-change.negative {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .platform-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .platform-stat {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        color: white;
+    }
+    .platform-stat.twitter { background: linear-gradient(135deg, #1DA1F2 0%, #0d8bda 100%); }
+    .platform-stat.linkedin { background: linear-gradient(135deg, #0077b5 0%, #005582 100%); }
+    .platform-stat.instagram { background: linear-gradient(135deg, #E1306C 0%, #b31a51 100%); }
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    .top-posts {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .post-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+    .post-item:hover {
+        background-color: #f8f9fa;
+    }
+    .post-item:last-child {
+        border-bottom: none;
+    }
+    .engagement-badge {
+        font-size: 0.8em;
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    .date-range-selector {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .date-btn {
+        padding: 5px 15px;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .date-btn:hover {
+        background: #f8f9fa;
+    }
+    .date-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .export-btn {
+        margin-left: auto;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    .comparison-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .performance-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .indicator-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .indicator-icon.good { background: #d4edda; color: #155724; }
+    .indicator-icon.average { background: #fff3cd; color: #856404; }
+    .indicator-icon.poor { background: #f8d7da; color: #721c24; }
+    .insights-section {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .insight-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .insight-item:last-child {
+        border-bottom: none;
+    }
+    .insight-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    .insight-icon.tip { background: #d1ecf1; color: #0c5460; }
+    .insight-icon.warning { background: #f8d7da; color: #721c24; }
+    .insight-icon.success { background: #d4edda; color: #155724; }
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-header d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-up"></i> Analytics Dashboard</h2>
+    <div class="export-btn">
+        <button class="btn btn-outline-primary" onclick="exportAnalytics()">
+            <i class="bi bi-download"></i> Export Report
+        </button>
+        <button class="btn btn-outline-secondary ms-2" onclick="printAnalytics()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+</div>
+
+<!-- Date Range Selector -->
+<div class="date-range-selector">
+    <span class="fw-bold">Time Period:</span>
+    <button class="date-btn active" onclick="changeDateRange('7d')">7 Days</button>
+    <button class="date-btn" onclick="changeDateRange('30d')">30 Days</button>
+    <button class="date-btn" onclick="changeDateRange('90d')">90 Days</button>
+    <button class="date-btn" onclick="changeDateRange('ytd')">Year to Date</button>
+    <div class="input-group" style="width: 300px;">
+        <input type="date" class="form-control" id="customStartDate">
+        <span class="input-group-text">to</span>
+        <input type="date" class="form-control" id="customEndDate">
+        <button class="btn btn-outline-secondary" type="button" onclick="applyCustomDateRange()">
+            Apply
+        </button>
+    </div>
+    <div class="text-muted" id="dateRangeLabel">Last 7 days</div>
+</div>
+
+<!-- Loading State -->
+<div id="loadingState" class="loading-spinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <span class="ms-2">Loading analytics data...</span>
+</div>
+
+<!-- Analytics Content -->
+<div id="analyticsContent">
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted">Total Posts</div>
+                    <div class="metric-value" id="totalPostsMetric">0</div>
+                </div>
+                <div class="metric-change positive" id="postsChange">+0%</div>
+            </div>
+            <div class="text-muted small">vs previous period</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted">Total Engagement</div>
+                    <div class="metric-value" id="totalEngagementMetric">0</div>
+                </div>
+                <div class="metric-change positive" id="engagementChange">+0%</div>
+            </div>
+            <div class="text-muted small">Likes, comments & shares</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted">Avg. Engagement Rate</div>
+                    <div class="metric-value" id="avgEngagementMetric">0%</div>
+                </div>
+                <div class="metric-change negative" id="engagementRateChange">-0%</div>
+            </div>
+            <div class="text-muted small">Per post average</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted">Best Performing Platform</div>
+                    <div class="metric-value" id="bestPlatformMetric">-</div>
+                </div>
+                <div class="metric-change positive" id="platformChange">+0%</div>
+            </div>
+            <div class="text-muted small" id="platformEngagement">0 engagement</div>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Stats -->
+<div class="platform-stats mb-4">
+    <div class="platform-stat twitter">
+        <div class="stat-icon">
+            <i class="bi bi-twitter"></i>
+        </div>
+        <div class="stat-value" id="twitterPosts">0</div>
+        <div class="stat-label">Twitter Posts</div>
+        <div class="stat-engagement" id="twitterEngagement">0 engagement</div>
+    </div>
+    <div class="platform-stat linkedin">
+        <div class="stat-icon">
+            <i class="bi bi-linkedin"></i>
+        </div>
+        <div class="stat-value" id="linkedinPosts">0</div>
+        <div class="stat-label">LinkedIn Posts</div>
+        <div class="stat-engagement" id="linkedinEngagement">0 engagement</div>
+    </div>
+    <div class="platform-stat instagram">
+        <div class="stat-icon">
+            <i class="bi bi-instagram"></i>
+        </div>
+        <div class="stat-value" id="instagramPosts">0</div>
+        <div class="stat-label">Instagram Posts</div>
+        <div class="stat-engagement" id="instagramEngagement">0 engagement</div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="chart-container">
+            <h5>Engagement Over Time</h5>
+            <div id="engagementChart" style="height: 300px;"></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5>Platform Distribution</h5>
+            <div id="platformChart" style="height: 300px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h5>Best Performing Content Types</h5>
+            <div id="contentTypeChart" style="height: 250px;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h5>Optimal Posting Times</h5>
+            <div id="timeChart" style="height: 250px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Indicators -->
+<div class="comparison-row mb-4">
+    <div class="performance-indicator">
+        <div class="indicator-icon good">
+            <i class="bi bi-check-lg"></i>
+        </div>
+        <div>
+            <div class="fw-bold">Engagement Rate</div>
+            <div class="text-muted small">Better than 75% of similar accounts</div>
+        </div>
+    </div>
+    <div class="performance-indicator">
+        <div class="indicator-icon average">
+            <i class="bi bi-clock"></i>
+        </div>
+        <div>
+            <div class="fw-bold">Posting Frequency</div>
+            <div class="text-muted small">Optimal: 3-5 posts per week</div>
+        </div>
+    </div>
+    <div class="performance-indicator">
+        <div class="indicator-icon good">
+            <i class="bi bi-arrow-up-right"></i>
+        </div>
+        <div>
+            <div class="fw-bold">Growth Trend</div>
+            <div class="text-muted small">+15% month-over-month</div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing Posts -->
+<div class="top-posts">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Top Performing Posts</h5>
+        <select class="form-select form-select-sm" style="width: auto;" id="topPostsFilter" onchange="loadTopPosts()">
+            <option value="all">All Platforms</option>
+            <option value="twitter">Twitter</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="instagram">Instagram</option>
+        </select>
+    </div>
+
+    <div id="topPostsList">
+        <!-- Posts will be loaded here -->
+        <div class="empty-state">
+            <i class="bi bi-bar-chart"></i>
+            <p>No posts to analyze yet</p>
+        </div>
+    </div>
+</div>
+
+<!-- AI Insights -->
+<div class="insights-section">
+    <h5 class="mb-3"><i class="bi bi-lightbulb"></i> AI Insights & Recommendations</h5>
+    <div id="insightsList">
+        <div class="insight-item">
+            <span class="insight-icon tip"><i class="bi bi-info-circle"></i></span>
+            <span>Your educational content performs 45% better than promotional posts.</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-icon warning"><i class="bi bi-exclamation-triangle"></i></span>
+            <span>Posts published after 8 PM receive 60% less engagement.</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-icon success"><i class="bi bi-check-circle"></i></span>
+            <span>Using 3-5 hashtags increases engagement by 25% on Instagram.</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-icon tip"><i class="bi bi-info-circle"></i></span>
+            <span>Video content generates 3x more shares than image posts.</span>
+        </div>
+    </div>
+    <button class="btn btn-outline-primary btn-sm mt-3" onclick="generateMoreInsights()">
+        <i class="bi bi-arrow-clockwise"></i> Generate More Insights
+    </button>
+</div>
+
+<!-- Comparison Table -->
+<div class="chart-container mb-4">
+    <h5 class="mb-3">Platform Comparison</h5>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Twitter</th>
+                    <th>LinkedIn</th>
+                    <th>Instagram</th>
+                    <th>Average</th>
+                </tr>
+            </thead>
+            <tbody id="comparisonTable">
+                <tr>
+                    <td>Posts</td>
+                    <td id="twPosts">0</td>
+                    <td id="liPosts">0</td>
+                    <td id="igPosts">0</td>
+                    <td id="avgPosts">0</td>
+                </tr>
+                <tr>
+                    <td>Avg. Likes</td>
+                    <td id="twLikes">0</td>
+                    <td id="liLikes">0</td>
+                    <td id="igLikes">0</td>
+                    <td id="avgLikes">0</td>
+                </tr>
+                <tr>
+                    <td>Avg. Comments</td>
+                    <td id="twComments">0</td>
+                    <td id="liComments">0</td>
+                    <td id="igComments">0</td>
+                    <td id="avgComments">0</td>
+                </tr>
+                <tr>
+                    <td>Avg. Shares</td>
+                    <td id="twShares">0</td>
+                    <td id="liShares">0</td>
+                    <td id="igShares">0</td>
+                    <td id="avgShares">0</td>
+                </tr>
+                <tr>
+                    <td>Engagement Rate</td>
+                    <td id="twRate">0%</td>
+                    <td id="liRate">0%</td>
+                    <td id="igRate">0%</td>
+                    <td id="avgRate">0%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div> <!-- End analyticsContent -->
+
+<!-- Empty State -->
+<div id="emptyState" class="empty-state" style="display: none;">
+    <i class="bi bi-graph-up"></i>
+    <h4>No Analytics Data Yet</h4>
+    <p class="mb-4">Start scheduling and publishing posts to see analytics here</p>
+    <a href="{{ url_for('main.schedule_post') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Schedule Your First Post
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+<script>
+let currentDateRange = '7d';
+let engagementChart, platformChart, contentTypeChart, timeChart;
+let analyticsData = null;
+
+// Initialize analytics
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+
+    document.getElementById('customStartDate').value = formatDate(startDate);
+    document.getElementById('customEndDate').value = formatDate(endDate);
+
+    // Load analytics data
+    loadAnalytics();
+
+    // Initialize charts
+    initCharts();
+});
+
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function changeDateRange(range) {
+    currentDateRange = range;
+
+    // Update active button
+    document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Update label
+    const labels = {
+        '7d': 'Last 7 days',
+        '30d': 'Last 30 days',
+        '90d': 'Last 90 days',
+        'ytd': 'Year to date'
+    };
+    document.getElementById('dateRangeLabel').textContent = labels[range];
+
+    // Load data for new range
+    loadAnalytics();
+}
+
+function applyCustomDateRange() {
+    const startDate = document.getElementById('customStartDate').value;
+    const endDate = document.getElementById('customEndDate').value;
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('Start date cannot be after end date');
+        return;
+    }
+
+    // Update label
+    const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const end = new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById('dateRangeLabel').textContent = `${start} - ${end}`;
+
+    // Load data
+    loadCustomAnalytics(startDate, endDate);
+}
+
+async function loadAnalytics() {
+    showLoading(true);
+
+    try {
+        const response = await fetch(`/api/analytics/data?days=${getDaysFromRange(currentDateRange)}`);
+        if (!response.ok) throw new Error('Failed to load analytics');
+
+        analyticsData = await response.json();
+
+        if (analyticsData.success && analyticsData.data && analyticsData.data.length > 0) {
+            processAnalyticsData(analyticsData.data);
+            showEmptyState(false);
+        } else {
+            showEmptyState(true);
+        }
+
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        alert('Failed to load analytics data. Please try again.');
+        showEmptyState(true);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadCustomAnalytics(startDate, endDate) {
+    showLoading(true);
+
+    try {
+        // In a real app, this would call a different API endpoint
+        // For now, we'll use the same endpoint with calculated days
+        const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+        const response = await fetch(`/api/analytics/data?days=${days}`);
+
+        if (!response.ok) throw new Error('Failed to load analytics');
+
+        analyticsData = await response.json();
+
+        if (analyticsData.success && analyticsData.data) {
+            processAnalyticsData(analyticsData.data);
+            showEmptyState(false);
+        } else {
+            showEmptyState(true);
+        }
+
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        alert('Failed to load analytics data. Please try again.');
+        showEmptyState(true);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function getDaysFromRange(range) {
+    switch(range) {
+        case '7d': return 7;
+        case '30d': return 30;
+        case '90d': return 90;
+        case 'ytd':
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), 0, 1);
+            return Math.ceil((today - firstDay) / (1000 * 60 * 60 * 24));
+        default: return 7;
+    }
+}
+
+function processAnalyticsData(data) {
+    // Calculate metrics from data
+    const metrics = calculateMetrics(data);
+
+    // Update metric cards
+    updateMetricCards(metrics);
+
+    // Update platform stats
+    updatePlatformStats(metrics);
+
+    // Update comparison table
+    updateComparisonTable(metrics);
+
+    // Update charts
+    updateCharts(metrics, data);
+
+    // Load top posts
+    loadTopPosts();
+}
+
+function calculateMetrics(data) {
+    // This is a simplified calculation - in a real app, this would be more comprehensive
+    const metrics = {
+        totalPosts: 0,
+        totalEngagement: 0,
+        avgEngagementRate: 0,
+        bestPlatform: 'None',
+        platformData: {
+            twitter: { posts: 0, engagement: 0, likes: 0, comments: 0, shares: 0 },
+            linkedin: { posts: 0, engagement: 0, likes: 0, comments: 0, shares: 0 },
+            instagram: { posts: 0, engagement: 0, likes: 0, comments: 0, shares: 0 }
+        },
+        changes: {
+            posts: 15, // +15%
+            engagement: 25, // +25%
+            engagementRate: -5, // -5%
+            platform: 10 // +10%
+        }
+    };
+
+    // Calculate from data
+    data.forEach(day => {
+        metrics.totalPosts += day.total_posts || 0;
+        metrics.totalEngagement += day.total_engagement || 0;
+
+        // Platform breakdown
+        Object.keys(day.platform_breakdown || {}).forEach(platform => {
+            if (metrics.platformData[platform]) {
+                metrics.platformData[platform].posts += day.platform_breakdown[platform].count || 0;
+                metrics.platformData[platform].engagement += day.platform_breakdown[platform].engagement || 0;
+            }
+        });
+    });
+
+    // Calculate averages
+    if (metrics.totalPosts > 0) {
+        metrics.avgEngagementRate = Math.round((metrics.totalEngagement / metrics.totalPosts) * 10) / 10;
+    }
+
+    // Find best platform
+    let bestPlatform = null;
+    let bestEngagement = 0;
+
+    Object.keys(metrics.platformData).forEach(platform => {
+        if (metrics.platformData[platform].engagement > bestEngagement) {
+            bestEngagement = metrics.platformData[platform].engagement;
+            bestPlatform = platform;
+        }
+    });
+
+    metrics.bestPlatform = bestPlatform || 'None';
+
+    return metrics;
+}
+
+function updateMetricCards(metrics) {
+    // Total Posts
+    document.getElementById('totalPostsMetric').textContent = metrics.totalPosts;
+    document.getElementById('postsChange').textContent = `${metrics.changes.posts > 0 ? '+' : ''}${metrics.changes.posts}%`;
+    document.getElementById('postsChange').className = `metric-change ${metrics.changes.posts >= 0 ? 'positive' : 'negative'}`;
+
+    // Total Engagement
+    document.getElementById('totalEngagementMetric').textContent = metrics.totalEngagement.toLocaleString();
+    document.getElementById('engagementChange').textContent = `${metrics.changes.engagement > 0 ? '+' : ''}${metrics.changes.engagement}%`;
+    document.getElementById('engagementChange').className = `metric-change ${metrics.changes.engagement >= 0 ? 'positive' : 'negative'}`;
+
+    // Avg Engagement Rate
+    document.getElementById('avgEngagementMetric').textContent = `${metrics.avgEngagementRate}%`;
+    document.getElementById('engagementRateChange').textContent = `${metrics.changes.engagementRate > 0 ? '+' : ''}${metrics.changes.engagementRate}%`;
+    document.getElementById('engagementRateChange').className = `metric-change ${metrics.changes.engagementRate >= 0 ? 'positive' : 'negative'}`;
+
+    // Best Platform
+    const platformNames = {
+        twitter: 'Twitter',
+        linkedin: 'LinkedIn',
+        instagram: 'Instagram'
+    };
+    document.getElementById('bestPlatformMetric').textContent = platformNames[metrics.bestPlatform] || '-';
+    document.getElementById('platformChange').textContent = `${metrics.changes.platform > 0 ? '+' : ''}${metrics.changes.platform}%`;
+    document.getElementById('platformEngagement').textContent = `${metrics.platformData[metrics.bestPlatform]?.engagement || 0} engagement`;
+}
+
+function updatePlatformStats(metrics) {
+    // Twitter
+    document.getElementById('twitterPosts').textContent = metrics.platformData.twitter.posts;
+    document.getElementById('twitterEngagement').textContent = `${metrics.platformData.twitter.engagement} engagement`;
+
+    // LinkedIn
+    document.getElementById('linkedinPosts').textContent = metrics.platformData.linkedin.posts;
+    document.getElementById('linkedinEngagement').textContent = `${metrics.platformData.linkedin.engagement} engagement`;
+
+    // Instagram
+    document.getElementById('instagramPosts').textContent = metrics.platformData.instagram.posts;
+    document.getElementById('instagramEngagement').textContent = `${metrics.platformData.instagram.engagement} engagement`;
+}
+
+function updateComparisonTable(metrics) {
+    // Calculate averages
+    const totalPlatforms = Object.keys(metrics.platformData).length;
+
+    // Posts
+    document.getElementById('twPosts').textContent = metrics.platformData.twitter.posts;
+    document.getElementById('liPosts').textContent = metrics.platformData.linkedin.posts;
+    document.getElementById('igPosts').textContent = metrics.platformData.instagram.posts;
+    document.getElementById('avgPosts').textContent = Math.round((metrics.platformData.twitter.posts + metrics.platformData.linkedin.posts + metrics.platformData.instagram.posts) / totalPlatforms);
+
+    // Likes (simulated data)
+    document.getElementById('twLikes').textContent = '42';
+    document.getElementById('liLikes').textContent = '28';
+    document.getElementById('igLikes').textContent = '156';
+    document.getElementById('avgLikes').textContent = '75';
+
+    // Comments (simulated data)
+    document.getElementById('twComments').textContent = '12';
+    document.getElementById('liComments').textContent = '8';
+    document.getElementById('igComments').textContent = '45';
+    document.getElementById('avgComments').textContent = '22';
+
+    // Shares (simulated data)
+    document.getElementById('twShares').textContent = '18';
+    document.getElementById('liShares').textContent = '5';
+    document.getElementById('igShares').textContent = '32';
+    document.getElementById('avgShares').textContent = '18';
+
+    // Engagement Rates (simulated data)
+    document.getElementById('twRate').textContent = '2.4%';
+    document.getElementById('liRate').textContent = '1.8%';
+    document.getElementById('igRate').textContent = '4.2%';
+    document.getElementById('avgRate').textContent = '2.8%';
+}
+
+function initCharts() {
+    // Engagement Over Time Chart
+    engagementChart = new ApexCharts(document.querySelector("#engagementChart"), {
+        series: [{
+            name: 'Engagement',
+            data: []
+        }],
+        chart: {
+            type: 'area',
+            height: '100%',
+            zoom: {
+                enabled: true
+            },
+            toolbar: {
+                show: true
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        colors: ['#667eea'],
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.7,
+                opacityTo: 0.3,
+                stops: [0, 90, 100]
+            }
+        },
+        xaxis: {
+            categories: [],
+            type: 'datetime'
+        },
+        yaxis: {
+            title: {
+                text: 'Engagement'
+            }
+        },
+        tooltip: {
+            x: {
+                format: 'dd MMM yyyy'
+            }
+        }
+    });
+
+    engagementChart.render();
+
+    // Platform Distribution Chart
+    platformChart = new ApexCharts(document.querySelector("#platformChart"), {
+        series: [0, 0, 0],
+        chart: {
+            type: 'donut',
+            height: '100%'
+        },
+        labels: ['Twitter', 'LinkedIn', 'Instagram'],
+        colors: ['#1DA1F2', '#0077b5', '#E1306C'],
+        legend: {
+            position: 'bottom'
+        },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total Posts',
+                            color: '#6c757d'
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    platformChart.render();
+
+    // Content Type Chart
+    contentTypeChart = new ApexCharts(document.querySelector("#contentTypeChart"), {
+        series: [{
+            data: []
+        }],
+        chart: {
+            type: 'bar',
+            height: '100%',
+            toolbar: {
+                show: false
+            }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                horizontal: true,
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        colors: ['#10b981'],
+        xaxis: {
+            categories: [],
+            title: {
+                text: 'Engagement'
+            }
+        }
+    });
+
+    contentTypeChart.render();
+
+    // Time Chart
+    timeChart = new ApexCharts(document.querySelector("#timeChart"), {
+        series: [{
+            name: 'Engagement',
+            data: []
+        }],
+        chart: {
+            type: 'line',
+            height: '100%',
+            toolbar: {
+                show: false
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3
+        },
+        colors: ['#f59e0b'],
+        markers: {
+            size: 5
+        },
+        xaxis: {
+            categories: ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'],
+            title: {
+                text: 'Time of Day'
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Avg. Engagement'
+            }
+        }
+    });
+
+    timeChart.render();
+}
+
+function updateCharts(metrics, data) {
+    // Engagement Over Time Chart
+    const dates = data.map(day => day.date);
+    const engagements = data.map(day => day.total_engagement || 0);
+
+    engagementChart.updateOptions({
+        xaxis: {
+            categories: dates
+        }
+    });
+
+    engagementChart.updateSeries([{
+        name: 'Engagement',
+        data: engagements
+    }]);
+
+    // Platform Distribution Chart
+    const platformData = [
+        metrics.platformData.twitter.posts,
+        metrics.platformData.linkedin.posts,
+        metrics.platformData.instagram.posts
+    ];
+
+    platformChart.updateSeries(platformData);
+
+    // Content Type Chart (simulated data)
+    const contentTypes = ['Educational', 'Promotional', 'Entertainment', 'News', 'Question'];
+    const typeEngagement = [45, 23, 67, 32, 56];
+
+    contentTypeChart.updateOptions({
+        xaxis: {
+            categories: contentTypes
+        }
+    });
+
+    contentTypeChart.updateSeries([{
+        data: typeEngagement
+    }]);
+
+    // Time Chart (simulated data)
+    const times = ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'];
+    const timeEngagement = [12, 45, 67, 34, 28, 15];
+
+    timeChart.updateSeries([{
+        name: 'Engagement',
+        data: timeEngagement
+    }]);
+}
+
+async function loadTopPosts() {
+    const platformFilter = document.getElementById('topPostsFilter').value;
+
+    try {
+        // In a real app, this would fetch top posts from API
+        // For now, we'll show simulated data
+        const posts = [
+            {
+                id: 1,
+                title: 'The Future of AI in Marketing',
+                platform: 'linkedin',
+                engagement: 245,
+                content: 'Exploring how artificial intelligence is revolutionizing digital marketing strategies...',
+                likes: 156,
+                comments: 42,
+                shares: 47
+            },
+            {
+                id: 2,
+                title: '5 Productivity Hacks That Actually Work',
+                platform: 'twitter',
+                engagement: 189,
+                content: 'After testing dozens of methods, here are the top 5 productivity techniques...',
+                likes: 123,
+                comments: 38,
+                shares: 28
+            },
+            {
+                id: 3,
+                title: 'Behind the Scenes: Our Design Process',
+                platform: 'instagram',
+                engagement: 321,
+                content: 'Take a look at how our design team creates stunning visuals from concept to final product...',
+                likes: 245,
+                comments: 56,
+                shares: 20
+            },
+            {
+                id: 4,
+                title: 'Remote Work Best Practices',
+                platform: 'linkedin',
+                engagement: 178,
+                content: 'Essential tips for maintaining productivity and work-life balance while working remotely...',
+                likes: 98,
+                comments: 45,
+                shares: 35
+            },
+            {
+                id: 5,
+                title: 'Tech Trends 2024',
+                platform: 'twitter',
+                engagement: 156,
+                content: 'From Web3 to quantum computing, here are the tech trends to watch in 2024...',
+                likes: 112,
+                comments: 32,
+                shares: 12
+            }
+        ];
+
+        // Filter by platform if needed
+        const filteredPosts = platformFilter === 'all'
+            ? posts
+            : posts.filter(post => post.platform === platformFilter);
+
+        displayTopPosts(filteredPosts);
+
+    } catch (error) {
+        console.error('Error loading top posts:', error);
+        document.getElementById('topPostsList').innerHTML = `
+            <div class="alert alert-warning">
+                Failed to load top posts. Please try again.
+            </div>
+        `;
+    }
+}
+
+function displayTopPosts(posts) {
+    const container = document.getElementById('topPostsList');
+
+    if (posts.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-bar-chart"></i>
+                <p>No posts found for the selected platform</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+
+    posts.forEach((post, index) => {
+        const platformColors = {
+            twitter: 'bg-info',
+            linkedin: 'bg-primary',
+            instagram: 'bg-danger'
+        };
+
+        const platformIcons = {
+            twitter: 'bi-twitter',
+            linkedin: 'bi-linkedin',
+            instagram: 'bi-instagram'
+        };
+
+        html += `
+            <div class="post-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="me-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge ${platformColors[post.platform]} me-2">
+                                <i class="bi ${platformIcons[post.platform]}"></i> ${post.platform.charAt(0).toUpperCase() + post.platform.slice(1)}
+                            </span>
+                            <span class="engagement-badge bg-success">
+                                <i class="bi bi-graph-up"></i> ${post.engagement} engagement
+                            </span>
+                        </div>
+                        <h6 class="mb-1">${post.title}</h6>
+                        <p class="text-muted small mb-2">${post.content.substring(0, 100)}...</p>
+                        <div class="d-flex gap-3">
+                            <small><i class="bi bi-heart"></i> ${post.likes}</small>
+                            <small><i class="bi bi-chat"></i> ${post.comments}</small>
+                            <small><i class="bi bi-share"></i> ${post.shares}</small>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewPostDetails(${post.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function viewPostDetails(postId) {
+    // In a real app, this would open a modal or redirect
+    alert(`Viewing details for post ${postId}. In a real app, this would show more details.`);
+}
+
+function generateMoreInsights() {
+    const insightsList = document.getElementById('insightsList');
+    const newInsights = [
+        {
+            type: 'tip',
+            icon: 'bi-info-circle',
+            text: 'Posts with questions in the title receive 35% more comments.'
+        },
+        {
+            type: 'success',
+            icon: 'bi-check-circle',
+            text: 'Your Wednesday posts perform 20% better than other weekdays.'
+        },
+        {
+            type: 'warning',
+            icon: 'bi-exclamation-triangle',
+            text: 'Consider increasing video content - it has 3x higher retention rate.'
+        }
+    ];
+
+    // Add one random new insight
+    const randomInsight = newInsights[Math.floor(Math.random() * newInsights.length)];
+
+    const insightElement = document.createElement('div');
+    insightElement.className = 'insight-item';
+    insightElement.innerHTML = `
+        <span class="insight-icon ${randomInsight.type}"><i class="bi ${randomInsight.icon}"></i></span>
+        <span>${randomInsight.text}</span>
+    `;
+
+    insightsList.appendChild(insightElement);
+
+    // Show notification
+    alert('New AI insight generated!');
+}
+
+function exportAnalytics() {
+    if (!analyticsData) {
+        alert('No analytics data to export');
+        return;
+    }
+
+    // Create export data
+    const exportData = {
+        dateRange: currentDateRange,
+        generatedAt: new Date().toISOString(),
+        metrics: {
+            totalPosts: document.getElementById('totalPostsMetric').textContent,
+            totalEngagement: document.getElementById('totalEngagementMetric').textContent,
+            avgEngagementRate: document.getElementById('avgEngagementMetric').textContent
+        },
+        data: analyticsData
+    };
+
+    // Convert to JSON
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+    // Create download link
+    const exportFileDefaultName = `analytics-export-${new Date().toISOString().split('T')[0]}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+
+    alert('Analytics report exported successfully!');
+}
+
+function printAnalytics() {
+    window.print();
+}
+
+function showLoading(show) {
+    if (show) {
+        document.getElementById('loadingState').style.display = 'flex';
+        document.getElementById('analyticsContent').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+    } else {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('analyticsContent').style.display = 'block';
+    }
+}
+
+function showEmptyState(show) {
+    if (show) {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('analyticsContent').style.display = 'none';
+    } else {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('analyticsContent').style.display = 'block';
+    }
+}
+
+// Auto-refresh analytics every 5 minutes
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        loadAnalytics();
+    }
+}, 5 * 60 * 1000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+R to refresh
+    if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        loadAnalytics();
+    }
+
+    // Ctrl+E to export
+    if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        exportAnalytics();
+    }
+});
+</script>
+{% endblock %}
