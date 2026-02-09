@@ -3,9 +3,9 @@
 
 A powerful, AI-enhanced social media content scheduling application built with Flask. Schedule, manage, and analyze your posts across multiple platforms from a single dashboard.
 
-**✨ Features
+**✨ Features**
 
-🗓️ Content Calendar**
+**🗓️ Content Calendar**
 
 -Visual calendar interface for scheduling posts
 
@@ -122,3 +122,19 @@ Email: test@example.com
 
 Password: password123
 ```
+
+<img width="1340" height="620" alt="image" src="https://github.com/user-attachments/assets/52b54eee-b003-495c-becb-4506efeba0a7" />
+
+
+<img width="1251" height="472" alt="image" src="https://github.com/user-attachments/assets/3bd2caa5-96bd-42c4-ad5d-06c9325d83ba" />
+
+<img width="1350" height="509" alt="image" src="https://github.com/user-attachments/assets/367dd459-63b5-4454-a3cc-922386ee7bc6" />
+
+<img width="1348" height="625" alt="image" src="https://github.com/user-attachments/assets/55073536-dd9e-4a56-8d6b-8d3200d310a6" />
+
+<img width="1257" height="628" alt="image" src="https://github.com/user-attachments/assets/d20c9058-8ff6-46b5-96d9-0e164e2aa1cb" />
+
+<img width="1343" height="623" alt="image" src="https://github.com/user-attachments/assets/3ef62b5b-37e8-44fc-b038-f153892a8d5d" />
+
+<img width="1229" height="485" alt="image" src="https://github.com/user-attachments/assets/2edd75f1-c817-454c-a8c9-106641448cd3" />
+
