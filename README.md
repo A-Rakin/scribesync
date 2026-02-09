@@ -1,13 +1,12 @@
-📅 ScribeSync - Social Media Content Scheduler
-https://img.shields.io/badge/Flask-2.3.3-green
-https://img.shields.io/badge/Python-3.8%252B-blue
-https://img.shields.io/badge/License-MIT-yellow
-https://img.shields.io/badge/Status-Active-brightgreen
+**📅 ScribeSync - Social Media Content Scheduler**
+
 
 A powerful, AI-enhanced social media content scheduling application built with Flask. Schedule, manage, and analyze your posts across multiple platforms from a single dashboard.
 
 **✨ Features
+
 🗓️ Content Calendar**
+
 -Visual calendar interface for scheduling posts
 
 -Drag-and-drop rescheduling
@@ -17,6 +16,7 @@ A powerful, AI-enhanced social media content scheduling application built with F
 -Color-coded platforms for easy identification
 
 **🤖 AI Content Suggestions**
+
 -Intelligent content idea generation
 
 -Platform-specific hashtag recommendations
@@ -28,6 +28,7 @@ A powerful, AI-enhanced social media content scheduling application built with F
 -No external API costs - uses smart algorithms instead of expensive AI APIs
 
 **🔄 Multi-Platform Scheduling**
+
 -Twitter - Thread support, character count validation
 
 -LinkedIn - Professional formatting, article snippets
@@ -39,6 +40,7 @@ A powerful, AI-enhanced social media content scheduling application built with F
 -Platform-specific auto-formatting
 
 **📊 Analytics Dashboard**
+
 -Real-time engagement metrics
 
 -Follower growth tracking
@@ -52,6 +54,7 @@ A powerful, AI-enhanced social media content scheduling application built with F
 -Predictive analytics for post performance
 
 **🛠️ Core Features**
+
 -User authentication (register/login)
 
 -Team collaboration tools
@@ -65,7 +68,9 @@ A powerful, AI-enhanced social media content scheduling application built with F
 -Real-time notifications
 
 **🚀 Quick Start**
+
 Prerequisites
+
 **Python 3.8 or higher**
 
 **pip (Python package manager)**
