@@ -125,9 +125,6 @@ Password: password123
 
 <img width="1340" height="620" alt="image" src="https://github.com/user-attachments/assets/52b54eee-b003-495c-becb-4506efeba0a7" />
 
-
-<img width="1251" height="472" alt="image" src="https://github.com/user-attachments/assets/3bd2caa5-96bd-42c4-ad5d-06c9325d83ba" />
-
 <img width="1350" height="509" alt="image" src="https://github.com/user-attachments/assets/367dd459-63b5-4454-a3cc-922386ee7bc6" />
 
 <img width="1348" height="625" alt="image" src="https://github.com/user-attachments/assets/55073536-dd9e-4a56-8d6b-8d3200d310a6" />
